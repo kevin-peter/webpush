@@ -8,6 +8,7 @@ self.addEventListener("push", e => {
   self.registration.showNotification(data.title, {
     body: data.body,
     requireInteraction: true,
-    icon: "icon.png" // Optional icon
+    icon: "icon.png",
+    vibrate: [200, 100, 200]
   });
 });
