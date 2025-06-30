@@ -1,7 +1,7 @@
 const express = require("express");
 const webpush = require("web-push");
 const path = require("path");
-const getDbConnection = require("./db/connect.js");
+const pool = require("./db/connect.js");
 
 const app = express();
 app.use(express.json());
@@ -15,11 +15,6 @@ webpush.setVapidDetails(
   privateVapidKey
 );
 
-let db;
-(async () => {
-  db = await getDbConnection();
-  console.log("✅ Connected to MySQL");
-})();
 
 app.use(express.static(path.join(__dirname, "client")));
 
@@ -28,7 +23,7 @@ app.post("/subscribe", async (req, res) => {
   const { endpoint, expirationTime, keys } = sub;
 
   try {
-    await db.execute(
+    await pool.query(
       `INSERT INTO push_subscriptions (endpoint, expirationTime, p256dh, auth)
        VALUES (?, ?, ?, ?)
        ON DUPLICATE KEY UPDATE expirationTime=VALUES(expirationTime), p256dh=VALUES(p256dh), auth=VALUES(auth)`,
@@ -52,7 +47,7 @@ app.post("/subscribe", async (req, res) => {
 
 app.post("/send", async (req, res) => {
   try {
-    const [rows] = await db.execute(`SELECT * FROM push_subscriptions`);
+    const [rows] = await pool.query(`SELECT * FROM push_subscriptions`);
 
     if (rows.length === 0) {
       return res.status(400).json({ error: "No subscriptions saved" });
@@ -76,7 +71,7 @@ app.post("/send", async (req, res) => {
           console.error(`❌ Failed push to ${sub.endpoint}:`, err);
 
           if (err.statusCode === 410 || err.statusCode === 404) {
-            await db.execute(`DELETE FROM push_subscriptions WHERE endpoint=?`, [sub.endpoint]);
+            await pool.query(`DELETE FROM push_subscriptions WHERE endpoint=?`, [sub.endpoint]);
             console.log(`🗑️ Removed expired subscription: ${sub.endpoint}`);
           }
         });
@@ -93,7 +88,7 @@ app.post("/send/:id", async (req, res) => {
   const subId = req.params.id;
 
   try {
-    const [rows] = await db.execute(`SELECT id, endpoint, p256dh, auth, expirationTime FROM push_subscriptions WHERE id = ?`, [subId]);
+    const [rows] = await pool.query(`SELECT id, endpoint, p256dh, auth, expirationTime FROM push_subscriptions WHERE id = ?`, [subId]);
 
     if (rows.length === 0) {
       return res.status(404).json({ error: "Subscription not found" });
