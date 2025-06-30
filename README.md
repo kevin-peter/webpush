@@ -28,7 +28,7 @@ This project demonstrates how to implement Web Push Notifications with:
 
 1. **Clone the repo:**
    ```bash
-   git clone https://github.com/yourusername/yourproject.git
+   git clone https://github.com/kevin-peter/webpush.git
    cd yourproject
 ````
 
