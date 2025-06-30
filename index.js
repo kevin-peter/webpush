@@ -38,8 +38,8 @@ app.post("/subscribe", async (req, res) => {
     res.status(201).json({ message: "Subscription saved" });
 
     const payload = JSON.stringify({
-      title: "Subscribed!",
-      body: "First notification right after subscribing 🎉"
+      title: sub.title || "Subscribed!",
+      body: sub.data || "First notification right after subscribing 🎉"
     });
 
     await webpush.sendNotification(sub, payload);
@@ -59,8 +59,8 @@ app.post("/send", async (req, res) => {
     }
 
     const payload = JSON.stringify({
-      title: "Manual Push",
-      body: "This was sent by calling /send 🚀"
+      title: req.body.title || "Manual Push",
+      body: req.body.data || "This was sent by calling /send 🚀"
     });
 
     await Promise.all(rows.map(async sub => {
@@ -107,8 +107,8 @@ app.post("/send/:id", async (req, res) => {
     };
 
     const payload = JSON.stringify({
-      title: "Personal Notification",
-      body: `Sent only to subscription ID ${sub.id} 🚀`,
+      title: req.body.title || "Personal Notification",
+      body: req.body.data || `Sent only to subscription ID ${sub.id} 🚀`,
     });
 
     await webpush.sendNotification(subscription, payload);
