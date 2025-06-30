@@ -1,0 +1,62 @@
+const express = require("express");
+const webpush = require("web-push");
+const path = require("path");
+
+const app = express();
+app.use(express.json()); // Parse JSON bodies
+
+// Your VAPID keys
+const publicVapidKey = "BOd2EQ8LTe3KAgMX9lWwTlHTRzv1Iantw50Mw6pUnsNr3pcxl8iglUs-YlQEQLo4UbJk9oyXs_BxgyAe0TCqKME";
+const privateVapidKey = "4AoSsRHFaHv0Fupd2NRtrungJF2jkqgccTu-WEc781w";
+
+webpush.setVapidDetails(
+  "mailto:your-email@example.com",
+  publicVapidKey,
+  privateVapidKey
+);
+
+// Serve static files from the "client" directory
+app.use(express.static(path.join(__dirname, "client")));
+
+// 🔥 Keep a variable to store the current subscription
+let currentSubscription = null;
+
+// Save the subscription sent by the browser
+app.post("/subscribe", (req, res) => {
+  currentSubscription = req.body;
+  res.status(201).json({ message: "Subscription saved" });
+
+  const payload = JSON.stringify({
+    title: "Subscribed!",
+    body: "First notification sent right after subscribing 🎉"
+  });
+
+  webpush.sendNotification(currentSubscription, payload)
+    .then(() => console.log("✅ First push sent"))
+    .catch(console.error);
+});
+
+// Manually send a notification to the last saved subscription
+app.post("/send", (req, res) => {
+  if (!currentSubscription) {
+    return res.status(400).json({ error: "No subscription saved. Subscribe first!" });
+  }
+
+  const payload = JSON.stringify({
+    title: "Manual Push",
+    body: "This was sent by calling /send 🚀"
+  });
+
+  webpush.sendNotification(currentSubscription, payload)
+    .then(() => {
+      console.log("✅ Manual push sent");
+      res.status(200).json({ message: "Push sent successfully" });
+    })
+    .catch(err => {
+      console.error("❌ Failed to send push:", err);
+      res.status(500).json({ error: "Failed to send push" });
+    });
+});
+
+const PORT = 5000;
+app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
