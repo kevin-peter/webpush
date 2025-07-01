@@ -6,8 +6,8 @@ const pool = require("./db/connect.js");
 const app = express();
 app.use(express.json());
 
-const publicVapidKey = process.env.VAPID_PUBLIC_KEY || "BOd2EQ8LTe3KAgMX9lWwTlHTRzv1Iantw50Mw6pUnsNr3pcxl8iglUs-YlQEQLo4UbJk9oyXs_BxgyAe0TCqKME";
-const privateVapidKey = process.env.VAPID_PRIVATE_KEY || "4AoSsRHFaHv0Fupd2NRtrungJF2jkqgccTu-WEc781w";
+const publicVapidKey = process.env.VAPID_PUBLIC_KEY;
+const privateVapidKey = process.env.VAPID_PRIVATE_KEY;
 
 webpush.setVapidDetails(
   "mailto:you@example.com",
